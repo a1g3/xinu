@@ -43,7 +43,7 @@
 #endif
 
 /* Maximum network address length */
-#define NET_MAX_ALEN    6
+#define NET_MAX_ALEN    16
 
 /**
  * @ingroup network
@@ -62,6 +62,7 @@ struct netaddr
 #define NETADDR_ETHERNET    1
 /** @ingroup network */
 #define NETADDR_IPv4        ETHER_TYPE_IPv4
+#define NETADDR_IPv6        ETHER_TYPE_IPv6
 
 extern const struct netaddr NETADDR_GLOBAL_IP_BRC;
 extern const struct netaddr NETADDR_GLOBAL_ETH_BRC;

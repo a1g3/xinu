@@ -45,6 +45,7 @@ thread test_raw(bool);
 thread test_ip(bool);
 thread test_umemory(bool);
 thread test_tlb(bool);
+thread test_netaddrsprintf(bool verbose);
 
 void testPass(bool, const char *);
 void testFail(bool, const char *);

@@ -5,31 +5,13 @@
 /* Embedded Xinu, Copyright (C) 2009.  All rights reserved. */
 
 #include <stddef.h>
-#include <stdlib.h>
 #include <stdio.h>
-#include <stdint.h>
-#include <shell.h>
-#include <string.h>
-#include <ctype.h>
-#include <clock.h>
+#include <ether.h>
+#include <interrupt.h>
+#include <ipv4.h>
+#include <network.h>
 #include <testsuite.h>
-#include <device.h>
-#include <uart.h>
-#include <mmu.h>
-#include <thread.h>
-
-void testproc(int i)
-{
-	int j;
-	uint cpuid = getcpuid();
-
-	enable();
-
-	for (j = 0; j < i; j++)
-	{
-		kprintf("Hello from TID %d\r\n", thrcurrent[cpuid]);
-	}
-}
+#include <ipv6.h>
 
 /**
  * @ingroup shell
@@ -45,26 +27,56 @@ void testproc(int i)
 shellcmd xsh_test(int nargs, char *args[])
 {
 	kprintf("\r\n===TEST BEGIN===\r\n");
+	struct netaddr a;
+	char str[128];
 
-	message msg;
-	int done1 = 0;
-	int done2 = 0;
-	tid_typ tid1, tid2;
-	tid1 = create(testproc, INITSTK, INITPRIO, "TESTPROC-1", 1, 100);
-	tid2 = create(testproc, INITSTK, INITPRIO, "TESTPROC-2", 1, 100);	
+    /* Setup structures */
+    a.type = NETADDR_IPv6;
+    a.len = IPv6_ADDR_LEN;
+    a.addr[0] = 0x12;
+    a.addr[1] = 0x34;
+    a.addr[2] = 0x56;
+    a.addr[3] = 0x78;
+    a.addr[4] = 0x90;
+    a.addr[5] = 0xAB;
+    a.addr[6] = 0xCD;
+    a.addr[7] = 0xEF;
+    a.addr[8] = 0x12;
+    a.addr[9] = 0x34;
+    a.addr[10] = 0x56;
+    a.addr[11] = 0x78;
+    a.addr[12] = 0x90;
+    a.addr[13] = 0xAB;
+    a.addr[14] = 0xCD;
+    a.addr[15] = 0xEF;
 
-	kprintf("Readying tid %d and %d on core 0\r\n", tid1, tid2);
+    netaddrsprintf(str, &a);
+    printf("\tIP %s", str);
+	bzero(&str, sizeof(str));
 
-	ready(tid1, RESCHED_NO, 0);
-	ready(tid2, RESCHED_NO, 0);
+    /* Setup structures */
+    a.type = NETADDR_IPv6;
+    a.len = IPv6_ADDR_LEN;
+    a.addr[0] = 0x12;
+    a.addr[1] = 0x34;
+    a.addr[2] = 0x56;
+    a.addr[3] = 0x78;
+    a.addr[4] = 0x90;
+    a.addr[5] = 0xAB;
+    a.addr[6] = 0xCD;
+    a.addr[7] = 0xEF;
+    a.addr[8] = 0x12;
+    a.addr[9] = 0x34;
+    a.addr[10] = 0x56;
+    a.addr[11] = 0x78;
+    a.addr[12] = 0x0;
+    a.addr[13] = 0x0;
+    a.addr[14] = 0x0;
+    a.addr[15] = 0x0;
 
-	while (!done1 || !done2)
-	{
-		msg = receive();
-		if (msg == (message)tid1) { done1 = 1; }
-		if (msg == (message)tid2) { done2 = 1; }
-	}
+	netaddrsprintf(str, &a);
+    printf("\tIP %s", str);
+	bzero(&str, sizeof(str));
 
-	kprintf("\r\n===TEST END===\r\n");
 	return 0;
 }

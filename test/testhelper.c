@@ -36,6 +36,7 @@ struct testcase testtab[] = {
     {"Raw Sockets", test_raw},
     {"IP", test_ip},
     {"User Memory", test_umemory},
+    {"Netaddrsprintf", test_netaddrsprintf},
     {"Simple TLB", test_tlb},
 };
 
