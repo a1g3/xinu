@@ -37,8 +37,14 @@ int netaddrsprintf(char *str, const struct netaddr *addr)
                 addr->addr[3]);
         break;
     case NETADDR_IPv6:
-        sprintf(str, "%02X%02X:%02X%02X:%02X%02X:%02X%02X:%02X%02X:%02X%02X:%02X%02X:%02X%02X", addr->addr[0], addr->addr[1], addr->addr[2], addr->addr[3], addr->addr[4], addr->addr[5], addr->addr[6], 
-                addr->addr[7], addr->addr[8], addr->addr[9], addr->addr[10], addr->addr[11], addr->addr[12], addr->addr[13], addr->addr[14], addr->addr[15]);
+        sprintf(str,
+                "%02X%02X:%02X%02X:%02X%02X:%02X%02X:%02X%02X:%02X%02X:%02X%02X:%02X%02X",
+                addr->addr[0], addr->addr[1], addr->addr[2],
+                addr->addr[3], addr->addr[4], addr->addr[5],
+                addr->addr[6], addr->addr[7], addr->addr[8],
+                addr->addr[9], addr->addr[10], addr->addr[11],
+                addr->addr[12], addr->addr[13], addr->addr[14],
+                addr->addr[15]);
         break;
     case NULL:
         sprintf(str, "NULL");

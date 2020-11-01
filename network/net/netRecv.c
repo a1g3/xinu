@@ -102,6 +102,8 @@ thread netRecv(struct netif *netptr)
                 netptr->nproc++;
                 break;
 
+                // IPv6 TODO: ipv6Recv
+
                 /* ARP Packet */
             case ETHER_TYPE_ARP:
                 arpRecv(pkt);

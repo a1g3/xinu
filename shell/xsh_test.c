@@ -8,7 +8,6 @@
 #include <stdio.h>
 #include <ether.h>
 #include <interrupt.h>
-#include <ipv4.h>
 #include <network.h>
 #include <testsuite.h>
 #include <ipv6.h>
@@ -26,57 +25,25 @@
  */
 shellcmd xsh_test(int nargs, char *args[])
 {
-	kprintf("\r\n===TEST BEGIN===\r\n");
-	struct netaddr a;
-	char str[128];
+    kprintf("\r\n===TEST BEGIN===\r\n");
+    struct netaddr a;
+    struct netaddr b;
 
     /* Setup structures */
-    a.type = NETADDR_IPv6;
-    a.len = IPv6_ADDR_LEN;
-    a.addr[0] = 0x12;
-    a.addr[1] = 0x34;
-    a.addr[2] = 0x56;
-    a.addr[3] = 0x78;
-    a.addr[4] = 0x90;
-    a.addr[5] = 0xAB;
-    a.addr[6] = 0xCD;
-    a.addr[7] = 0xEF;
-    a.addr[8] = 0x12;
-    a.addr[9] = 0x34;
-    a.addr[10] = 0x56;
-    a.addr[11] = 0x78;
-    a.addr[12] = 0x90;
-    a.addr[13] = 0xAB;
-    a.addr[14] = 0xCD;
-    a.addr[15] = 0xEF;
+    int test = dot2ipv6("1234:5678:90AB:CDEF:1234:ABCD:EF12:3456", &a);
+    printf("dot2ipv6 = %d\r\n", test);
+    for (int i = 0; i < 16; i++)
+    {
+        printf("%d. 0x%2X\r\n", i, a.addr[i]);
+    }
 
-    netaddrsprintf(str, &a);
-    printf("\tIP %s", str);
-	bzero(&str, sizeof(str));
 
-    /* Setup structures */
-    a.type = NETADDR_IPv6;
-    a.len = IPv6_ADDR_LEN;
-    a.addr[0] = 0x12;
-    a.addr[1] = 0x34;
-    a.addr[2] = 0x56;
-    a.addr[3] = 0x78;
-    a.addr[4] = 0x90;
-    a.addr[5] = 0xAB;
-    a.addr[6] = 0xCD;
-    a.addr[7] = 0xEF;
-    a.addr[8] = 0x12;
-    a.addr[9] = 0x34;
-    a.addr[10] = 0x56;
-    a.addr[11] = 0x78;
-    a.addr[12] = 0x0;
-    a.addr[13] = 0x0;
-    a.addr[14] = 0x0;
-    a.addr[15] = 0x0;
+    test = dot2ipv6("1234:5678:90AB:CDEF:1234:ABCD::", &b);
+    printf("dot2ipv6 = %d\r\n", test);
+    for (int i = 0; i < 16; i++)
+    {
+        printf("%d. 0x%2X\r\n", i, b.addr[i]);
+    }
 
-	netaddrsprintf(str, &a);
-    printf("\tIP %s", str);
-	bzero(&str, sizeof(str));
-
-	return 0;
+    return 0;
 }
