@@ -11,6 +11,8 @@
 #ifndef _IPv6_H_
 #define _IPv6_H_
 
+#define IPv6_HDR_LEN       40
+#define IPv6_HOP_LIMIT     64
 
 #define IPv6_ADDR_LEN       16
 #define IPv6_ADDR_UPMASK    0xFF00
@@ -29,5 +31,7 @@ struct ipv6Pkt             /**< IPv6 Packet Variables                   */
 };
 
 syscall dot2ipv6(const char *str, struct netaddr *ip);
-
+syscall ipv6Send(struct packet *pkt, struct netaddr *src,
+                 struct netaddr *dst, uchar proto);
+void printIpv6Packet(struct ipv6Pkt* pkt);
 #endif                          /* _IPv6_H_ */

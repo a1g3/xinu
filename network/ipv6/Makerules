@@ -6,7 +6,7 @@ COMP = network/ipv6
 # Source files for this component
 
 # Important network components
-C_FILES = dot2ipv6.c
+C_FILES = dot2ipv6.c ipv6Send.c ipv6Debug.c
 S_FILES =
 
 # Add the files to the compile source path
