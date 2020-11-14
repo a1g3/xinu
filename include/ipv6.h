@@ -12,7 +12,7 @@
 #define _IPv6_H_
 
 #define IPv6_HDR_LEN       40
-#define IPv6_HOP_LIMIT     64
+#define IPv6_HOP_LIMIT     255
 
 #define IPv6_ADDR_LEN       16
 #define IPv6_ADDR_UPMASK    0xFF00
@@ -27,8 +27,9 @@ struct ipv6Pkt             /**< IPv6 Packet Variables                   */
     uint8_t  hop_limit;           /**< IPv6 Flags and Fragment offset        */
     uint8_t   src[IPv6_ADDR_LEN]; /**< IPv6 source                           */
     uint8_t   dst[IPv6_ADDR_LEN]; /**< IPv6 destination                      */
-    uint8_t   opts[1];            /**< Options and padding is variable       */
 };
+
+#define NXT_HDR_ICMP        58
 
 syscall dot2ipv6(const char *str, struct netaddr *ip);
 syscall ipv6Send(struct packet *pkt, struct netaddr *src,

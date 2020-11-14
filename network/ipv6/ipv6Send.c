@@ -28,6 +28,7 @@ syscall ipv6Send(struct packet *pkt, struct netaddr *src,
     struct ipv6Pkt *ip;
     struct netaddr mac;
     int ver_class_flow = 0;
+    int originalLen = 0;
 
     /* Error check pointers */
     if ((NULL == pkt) || (NULL == dst))
@@ -55,19 +56,23 @@ syscall ipv6Send(struct packet *pkt, struct netaddr *src,
     pkt->nif = &netiftab[0];
 
     /* Set up outgoing packet header */
+    originalLen = pkt->len;
     pkt->len += IPv6_HDR_LEN;
     pkt->curr -= IPv6_HDR_LEN;
 
+    printf("ipv6send() Length: %d\r\n\r\n", originalLen);
     ip = (struct ipv6Pkt*)pkt->curr;
     ver_class_flow = 0b01100000000000000000000000000000;
     ip->ver_class_flow = hl2net(ver_class_flow);
-    ip->len = 0;
+    ip->len = hs2net(originalLen);
     ip->next_header = proto;
     ip->hop_limit = IPv6_HOP_LIMIT;
 
     memcpy(ip->src, src->addr, IPv6_ADDR_LEN);
     memcpy(ip->dst, dst->addr, IPv6_ADDR_LEN);
 
-    // IPv6 TODO: Fragment IPv6 packets (if needed)
+    printIpv6Packet(ip);
+
+    // IPv6 TODO: Fragment IPv6 packets (if needed). Fragmentation only happens at end hosts.
     return netSend(pkt, &mac, NULL, ETHER_TYPE_IPv6);
 }
