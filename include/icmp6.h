@@ -13,11 +13,13 @@
 #include <ipv6.h>
 
 #define ICMP6_HEADER_LEN		4       //data not included
+#define IPv6_PUESDO_HEADER_LEN		40
 
 struct ipv6_puesdo_header {
     uint8_t   src[IPv6_ADDR_LEN]; /**< IPv6 source                           */
     uint8_t   dst[IPv6_ADDR_LEN]; /**< IPv6 destination                      */
     uint32_t  len;
+    uint8_t   empty[3];
     uint8_t   next_header;
 };
 
@@ -27,6 +29,12 @@ struct icmp6Pkt                 /**< ICMP Packet         */
     uint8_t code;                 /**< ICMP code            */
     uint16_t chksum;              /**< ICMP checksum        */
     //uint8_t data[1];              /**< ICMP data            */
+};
+
+struct icmp6Echo
+{
+    ushort id;
+    ushort seq;
 };
 
 struct icmp6_options {
@@ -39,6 +47,7 @@ struct icmp6_options {
 syscall icmp6Send(struct packet *pkt, uchar type, uchar code, 
                 uint datalen, struct netaddr *src, struct netaddr *dst);
 syscall icmp6RouterSol(void);
+syscall icmp6EchoRequest(struct netaddr *dst, ushort id, ushort seq);
 void printicmp6(struct icmp6Pkt *pkt);
 
 #endif                          /* _ICMP6_H_ */

@@ -39,8 +39,10 @@ shellcmd xsh_test(int nargs, char *args[])
     printf("ipv6Send = %d\r\n", result);
 
     printf("\r\n\r\n=== ICMP Send ===\r\n");
-    result = icmp6RouterSol();
-    printf("icmp6RouterSol = %d\r\n", result);
+    result = icmp6EchoRequest(NULL, 1, 1);
+    printf("icmp6EchoRequest = %d\r\n", result);
+    //result = icmp6RouterSol();
+    //printf("icmp6RouterSol = %d\r\n", result);
 
     return 0;
 }
