@@ -14,7 +14,7 @@ syscall icmp6Send(struct packet *pkt, uchar type, uchar code,
         return SYSERR;
     }
 
-    if (src->type != NETADDR_IPv6 || src->type != NETADDR_IPv6)
+    if (dst->type != NETADDR_IPv6)
     {
         return SYSERR;
     }
@@ -28,7 +28,6 @@ syscall icmp6Send(struct packet *pkt, uchar type, uchar code,
     icmp->type = type;
     icmp->chksum = 0;
 
-    printicmp6(icmp);
     pkt->curr -= IPv6_PUESDO_HEADER_LEN;
     pkt->len += IPv6_PUESDO_HEADER_LEN;
 

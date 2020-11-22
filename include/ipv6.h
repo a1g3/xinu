@@ -19,6 +19,9 @@
 #define IPv6_ADDR_SHIFT     8
 #define IPv6_ADDR_LOMASK    0xFF
 
+#define NXT_HDR_ICMP        58
+#define ALL_ROUTER_MULTICAST_ADDR       "ff02:0000:0000:0000:0000:0000:0000:0002"
+
 struct ipv6Pkt             /**< IPv6 Packet Variables                   */
 {
     uint32_t  ver_class_flow;     /**< IPv6 Version and Internet Header Len  */
@@ -29,7 +32,6 @@ struct ipv6Pkt             /**< IPv6 Packet Variables                   */
     uint8_t   dst[IPv6_ADDR_LEN]; /**< IPv6 destination                      */
 };
 
-#define NXT_HDR_ICMP        58
 
 syscall dot2ipv6(const char *str, struct netaddr *ip);
 syscall ipv6Send(struct packet *pkt, struct netaddr *src,

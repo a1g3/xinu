@@ -36,8 +36,7 @@ syscall icmp6EchoRequest(struct netaddr *dst, ushort id, ushort seq)
     echo->seq = hs2net(seq);
 
     /* Setup structures */
-    dot2ipv6("1234:5678:90AB:CDEF:1234:ABCD:EF12:3456", &a);
     dot2ipv6("1234:5678:90AB:CDEF:1234:ABCD::", &b);
 
-    return icmp6Send(pkt, 128, 0, pkt->len, &a, &b);
+    return icmp6Send(pkt, 128, 0, pkt->len, &a, dst);
 }

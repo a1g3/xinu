@@ -28,7 +28,7 @@ struct icmp6Pkt                 /**< ICMP Packet         */
     uint8_t type;                 /**< ICMP type            */
     uint8_t code;                 /**< ICMP code            */
     uint16_t chksum;              /**< ICMP checksum        */
-    //uint8_t data[1];              /**< ICMP data            */
+    uint8_t data[1];              /**< ICMP data            */
 };
 
 struct icmp6Echo

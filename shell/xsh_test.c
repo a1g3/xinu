@@ -29,20 +29,23 @@ shellcmd xsh_test(int nargs, char *args[])
     kprintf("\r\n===TEST BEGIN===\r\n");
     struct netaddr a;
     struct netaddr b;
+    int result = 0;
 
     /* Setup structures */
     dot2ipv6("1234:5678:90AB:CDEF:1234:ABCD:EF12:3456", &a);
     dot2ipv6("1234:5678:90AB:CDEF:1234:ABCD::", &b);
 
-    struct packet *pkt = netGetbuf();
-    int result = ipv6Send(pkt, &a, &b, 59);
-    printf("ipv6Send = %d\r\n", result);
+    //struct packet *pkt = netGetbuf();
+    //result = ipv6Send(pkt, &a, &b, 59);
+    //printf("ipv6Send = %d\r\n", result);
 
-    printf("\r\n\r\n=== ICMP Send ===\r\n");
-    result = icmp6EchoRequest(NULL, 1, 1);
-    printf("icmp6EchoRequest = %d\r\n", result);
-    //result = icmp6RouterSol();
-    //printf("icmp6RouterSol = %d\r\n", result);
+    //printf("\r\n\r\n=== ICMP Send ===\r\n");
+    //dot2ipv6("1234:5678:90AB:CDEF:1234:ABCD:EF12:3456", &a);
+    //result = icmp6EchoRequest(&a, 1, 1);
+    //printf("icmp6EchoRequest = %d\r\n", result);
+    printf("=== Sending Router Solicitation ===\r\n");
+    result = icmp6RouterSol();
+    printf("icmp6RouterSol = %d\r\n", result);
 
     return 0;
 }

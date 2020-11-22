@@ -16,20 +16,15 @@ syscall icmp6RouterSol(void)
         return SYSERR;
     }
     /* Setup structures */
-    dot2ipv6("1234:5678:90AB:CDEF:1234:ABCD:EF12:3456", &a);
-    dot2ipv6("1234:5678:90AB:CDEF:1234:ABCD::", &b);
+    dot2ipv6("fe80:0000:0000:0000:7632:D5A7:45B6:B6D7", &a);
+    dot2ipv6(ALL_ROUTER_MULTICAST_ADDR, &b);
 
     pkt->len = sizeof(struct icmp6_options);
     pkt->curr -= pkt->len;
 
     mac.type = NETADDR_ETHERNET;
     mac.len = ETH_ADDR_LEN;
-    mac.addr[0] = 0xAA;
-    mac.addr[1] = 0xBB;
-    mac.addr[2] = 0xCC;
-    mac.addr[3] = 0xDD;
-    mac.addr[4] = 0xEE;
-    mac.addr[5] = 0xFF;
+    memcpy(&(mac.addr), &(netiftab[0].hwaddr.addr), netiftab[0].hwaddr.len);
 
     opt = (struct icmp6_options *)pkt->curr;
     opt->zeros[0] = 0;
@@ -38,7 +33,7 @@ syscall icmp6RouterSol(void)
     opt->zeros[1] = 0;
     opt->type = 1;
     opt->len = 1;
-    memcpy(opt->addr, &mac, ETH_ADDR_LEN);
+    memcpy(opt->addr, &mac.addr, ETH_ADDR_LEN);
 
     return icmp6Send(pkt, 133, 0, pkt->len, &a, &b);
 }

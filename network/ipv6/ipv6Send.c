@@ -45,12 +45,12 @@ syscall ipv6Send(struct packet *pkt, struct netaddr *src,
     // IPv6 TODO: Lookup destination in route table
     mac.type = NETADDR_ETHERNET;
     mac.len = ETH_ADDR_LEN;
-    mac.addr[0] = 0xAA;
-    mac.addr[1] = 0xBB;
-    mac.addr[2] = 0xCC;
-    mac.addr[3] = 0xDD;
-    mac.addr[4] = 0xEE;
-    mac.addr[5] = 0xFF;
+    mac.addr[0] = 0x33;
+    mac.addr[1] = 0x33;
+    mac.addr[2] = 0x00;
+    mac.addr[3] = 0x00;
+    mac.addr[4] = 0x00;
+    mac.addr[5] = 0x02;
 
     /* Packet has next hop in route table */
     pkt->nif = &netiftab[0];
@@ -60,7 +60,6 @@ syscall ipv6Send(struct packet *pkt, struct netaddr *src,
     pkt->len += IPv6_HDR_LEN;
     pkt->curr -= IPv6_HDR_LEN;
 
-    printf("ipv6send() Length: %d\r\n\r\n", originalLen);
     ip = (struct ipv6Pkt*)pkt->curr;
     ver_class_flow = 0b01100000000000000000000000000000;
     ip->ver_class_flow = hl2net(ver_class_flow);
@@ -71,7 +70,7 @@ syscall ipv6Send(struct packet *pkt, struct netaddr *src,
     memcpy(ip->src, src->addr, IPv6_ADDR_LEN);
     memcpy(ip->dst, dst->addr, IPv6_ADDR_LEN);
 
-    printIpv6Packet(ip);
+    // printIpv6Packet(ip);
 
     // IPv6 TODO: Fragment IPv6 packets (if needed). Fragmentation only happens at end hosts.
     return netSend(pkt, &mac, NULL, ETHER_TYPE_IPv6);
