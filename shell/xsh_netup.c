@@ -11,6 +11,7 @@
 #include <device.h>
 #include <ether.h> /* For ethertab */
 #include <ipv4.h>
+#include <ipv6.h>
 #include <shell.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -189,46 +190,53 @@ shellcmd xsh_netup(int nargs, char *args[])
     }
     else
     {
-        /* IP address not specified; use DHCP if available.  */
-    #ifdef WITH_DHCPC
-        struct dhcpData data;
+    #ifndef WITH_IPv6
+            /* IP address not specified; use DHCP if available.  */
+        #ifdef WITH_DHCPC
+            struct dhcpData data;
 
-        printf("Trying DHCP on %s...\n", devname);
+            printf("Trying DHCP on %s...\n", devname);
 
-        /* Wait at most 10 seconds before timing out.  */
-	result = dhcpClient(descrp, 10, &data);
+            /* Wait at most 10 seconds before timing out.  */
+            result = dhcpClient(descrp, 10, &data);
 
-        if (TIMEOUT == result)
-        {
-            fprintf(stderr, "ERROR: DHCP autoconfiguration "
-                    "on %s timed out\n", devname);
+            if (TIMEOUT == result)
+            {
+                fprintf(stderr, "ERROR: DHCP autoconfiguration "
+                        "on %s timed out\n", devname);
+                return SHELL_ERROR;
+            }
+            else if (OK != result)
+            {
+                fprintf(stderr, "ERROR: DHCP autoconfiguration "
+                        "on %s failed\n", devname);
+                return SHELL_ERROR;
+            }
+            netaddrcpy(&ip, &data.ip);
+            netaddrcpy(&mask, &data.mask);
+            if (0 != data.gateway.len)
+            {
+                /* Gateway was provided.  */
+                netaddrcpy(&gateway, &data.gateway);
+                gatewayptr = &gateway;
+            }
+            else
+            {
+                /* No gateway provided.  */
+                gatewayptr = NULL;
+            }
+        #else
+            fprintf(stderr,
+                "ERROR: DHCP not supported!  Either recompile Embedded Xinu with\n"
+                "       WITH_DHCPC defined in xinu.conf, or specify the IP address\n"
+                "       manually (try `? %s')\n", args[0]);
             return SHELL_ERROR;
-        }
-        else if (OK != result)
-        {
-            fprintf(stderr, "ERROR: DHCP autoconfiguration "
-                    "on %s failed\n", devname);
-            return SHELL_ERROR;
-        }
-        netaddrcpy(&ip, &data.ip);
-        netaddrcpy(&mask, &data.mask);
-        if (0 != data.gateway.len)
-        {
-            /* Gateway was provided.  */
-            netaddrcpy(&gateway, &data.gateway);
-            gatewayptr = &gateway;
-        }
-        else
-        {
-            /* No gateway provided.  */
-            gatewayptr = NULL;
-        }
+        #endif
     #else
-        fprintf(stderr,
-            "ERROR: DHCP not supported!  Either recompile Embedded Xinu with\n"
-            "       WITH_DHCPC defined in xinu.conf, or specify the IP address\n"
-            "       manually (try `? %s')\n", args[0]);
-        return SHELL_ERROR;
+        dot2ipv6("fe80:0000:0000:0000:7632:D5A7:45B6:B6D7", &ip);
+        dot2ipv6("fe80:0000:0000:0000:0000:0000:0000:0000", &mask);
+        dot2ipv6("fe80:0000:0000:0000:1491:82ff:fec6:55fa", &gateway);
+        gatewayptr = &gateway;
     #endif
     }
 

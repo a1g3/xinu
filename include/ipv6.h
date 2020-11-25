@@ -11,6 +11,18 @@
 #ifndef _IPv6_H_
 #define _IPv6_H_
 
+/* Tracing macros */
+//#define TRACE_IPv6     TTY1
+#ifdef TRACE_IPv6
+#include <stdio.h>
+#define IPv6_TRACE(...)     { \
+		fprintf(TRACE_IPv6, "%s:%d (%d) ", __FILE__, __LINE__, gettid()); \
+		fprintf(TRACE_IPv6, __VA_ARGS__); \
+		fprintf(TRACE_IPv6, "\n"); }
+#else
+#define IPv6_TRACE(...)
+#endif
+
 #define IPv6_HDR_LEN       40
 #define IPv6_HOP_LIMIT     255
 
@@ -25,7 +37,7 @@
 struct ipv6Pkt             /**< IPv6 Packet Variables                   */
 {
     uint32_t  ver_class_flow;     /**< IPv6 Version and Internet Header Len  */
-    uint16_t  len;                /**< IPv6 packet length including IHL      */
+    uint16_t  len;                /**< IPv6 packet payload length            */
     uint8_t  next_header;         /**< IPv6 identification                   */
     uint8_t  hop_limit;           /**< IPv6 Flags and Fragment offset        */
     uint8_t   src[IPv6_ADDR_LEN]; /**< IPv6 source                           */
@@ -36,5 +48,6 @@ struct ipv6Pkt             /**< IPv6 Packet Variables                   */
 syscall dot2ipv6(const char *str, struct netaddr *ip);
 syscall ipv6Send(struct packet *pkt, struct netaddr *src,
                  struct netaddr *dst, uchar proto);
+syscall ipv6Recv(struct packet *pkt);
 void printIpv6Packet(struct ipv6Pkt* pkt);
 #endif                          /* _IPv6_H_ */

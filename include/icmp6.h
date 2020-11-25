@@ -14,6 +14,8 @@
 
 #define ICMP6_HEADER_LEN		4       //data not included
 #define IPv6_PUESDO_HEADER_LEN		40
+#define ICMP6_ROUTER_SOL_LEN        4
+#define ICMP6_LINKDESTOPTION_LEN    8
 
 struct ipv6_puesdo_header {
     uint8_t   src[IPv6_ADDR_LEN]; /**< IPv6 source                           */
@@ -37,8 +39,11 @@ struct icmp6Echo
     ushort seq;
 };
 
-struct icmp6_options {
+struct icmp6RouterSol {
     uint8_t zeros[4];
+};
+
+struct icmp6LinkDestOption {
     uint8_t type;
     uint8_t len;
     uint8_t addr[ETH_ADDR_LEN];
@@ -49,5 +54,6 @@ syscall icmp6Send(struct packet *pkt, uchar type, uchar code,
 syscall icmp6RouterSol(void);
 syscall icmp6EchoRequest(struct netaddr *dst, ushort id, ushort seq);
 void printicmp6(struct icmp6Pkt *pkt);
+void icmp6AddLinkDestOption(struct packet *pkt);
 
 #endif                          /* _ICMP6_H_ */
