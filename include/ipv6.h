@@ -33,6 +33,7 @@
 
 #define NXT_HDR_ICMP        58
 #define ALL_ROUTER_MULTICAST_ADDR       "ff02:0000:0000:0000:0000:0000:0000:0002"
+#define UNSPECIFIED_ADDR                "0000:0000:0000:0000:0000:0000:0000:0000"
 
 struct ipv6Pkt             /**< IPv6 Packet Variables                   */
 {

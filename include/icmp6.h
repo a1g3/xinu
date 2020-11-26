@@ -15,6 +15,7 @@
 #define ICMP6_HEADER_LEN		4       //data not included
 #define IPv6_PUESDO_HEADER_LEN		40
 #define ICMP6_ROUTER_SOL_LEN        4
+#define ICMP6_NEIGHBOR_SOL_LEN      20
 #define ICMP6_LINKDESTOPTION_LEN    8
 
 struct ipv6_puesdo_header {
@@ -39,6 +40,11 @@ struct icmp6Echo
     ushort seq;
 };
 
+struct icmp6NeighborSol {
+    uint8_t zeros[4];
+    uint8_t addr[IPv6_ADDR_LEN];
+};
+
 struct icmp6RouterSol {
     uint8_t zeros[4];
 };
@@ -52,6 +58,7 @@ struct icmp6LinkDestOption {
 syscall icmp6Send(struct packet *pkt, uchar type, uchar code, 
                 uint datalen, struct netaddr *src, struct netaddr *dst);
 syscall icmp6RouterSol(void);
+syscall icmp6NeighborSol(bool isDuplicateAddrDetection, struct netaddr *target);
 syscall icmp6EchoRequest(struct netaddr *dst, ushort id, ushort seq);
 void printicmp6(struct icmp6Pkt *pkt);
 void icmp6AddLinkDestOption(struct packet *pkt);

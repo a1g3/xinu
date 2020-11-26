@@ -43,9 +43,9 @@ shellcmd xsh_test(int nargs, char *args[])
     //dot2ipv6("1234:5678:90AB:CDEF:1234:ABCD:EF12:3456", &a);
     //result = icmp6EchoRequest(&a, 1, 1);
     //printf("icmp6EchoRequest = %d\r\n", result);
-    printf("=== Sending Router Solicitation ===\r\n");
-    result = icmp6RouterSol();
-    printf("icmp6RouterSol = %d\r\n", result);
+    printf("=== Sending Neighbor Solicitation ===\r\n");
+    result = icmp6NeighborSol(TRUE, &a);
+    printf("icmp6NeighborSol = %d\r\n", result);
 
     return 0;
 }
