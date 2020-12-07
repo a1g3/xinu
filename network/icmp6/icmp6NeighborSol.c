@@ -1,5 +1,6 @@
 #include <xinu.h>
 #include <icmp6.h>
+
 //https://blogs.infoblox.com/ipv6-coe/slaac-to-basics-part-1-of-2/
 syscall icmp6NeighborSol(bool isDuplicateAddrDetection, struct netaddr *target)
 {

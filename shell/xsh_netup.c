@@ -15,6 +15,7 @@
 #include <shell.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <slaac.h>
 
 #ifdef WITH_DHCPC
 #  include <dhcpc.h>
@@ -233,7 +234,12 @@ shellcmd xsh_netup(int nargs, char *args[])
             return SHELL_ERROR;
         #endif
     #else
-        dot2ipv6("fe80:0000:0000:0000:7632:D5A7:45B6:B6D7", &ip);
+        char str2[40];
+        struct slaacData data;
+        result = slaacClient(descrp, 60, &data);
+        printf("SLAAC Result: %d\r\n", result);
+        netaddrsprintf(str2, &(data.ip));
+        printf("IP: %s\r\n", str2);
         dot2ipv6("fe80:0000:0000:0000:0000:0000:0000:0000", &mask);
         dot2ipv6("fe80:0000:0000:0000:1491:82ff:fec6:55fa", &gateway);
         gatewayptr = &gateway;
