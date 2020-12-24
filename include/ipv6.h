@@ -23,6 +23,7 @@
 #define IPv6_TRACE(...)
 #endif
 
+#define IPv6_VERSION       6
 #define IPv6_HDR_LEN       40
 #define IPv6_HOP_LIMIT     255
 
@@ -32,6 +33,7 @@
 #define IPv6_ADDR_LOMASK    0xFF
 
 #define NXT_HDR_ICMP        58
+#define NXT_HDR_UDP         17
 #define ALL_ROUTER_MULTICAST_ADDR       "ff02:0000:0000:0000:0000:0000:0000:0002"
 #define UNSPECIFIED_ADDR                "0000:0000:0000:0000:0000:0000:0000:0000"
 
@@ -43,6 +45,7 @@ struct ipv6Pkt             /**< IPv6 Packet Variables                   */
     uint8_t  hop_limit;           /**< IPv6 Flags and Fragment offset        */
     uint8_t   src[IPv6_ADDR_LEN]; /**< IPv6 source                           */
     uint8_t   dst[IPv6_ADDR_LEN]; /**< IPv6 destination                      */
+    uchar data[1];                /**< UDP data                       */
 };
 
 

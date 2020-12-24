@@ -16,6 +16,7 @@
 
 #include <ethernet.h>
 #include <ipv4.h>
+#include <ipv6.h>
 #include <udp.h>
 
 #if NETHER
@@ -24,6 +25,8 @@
 #define DEF_COUNT 0
 #define DEF_DSTIP "192.168.1.1"
 #define DEF_SRCIP "192.168.1.254"
+#define DEF_DSTIPv6 "fe80:0000:0000:0000:0000:0000:0000:0000"
+#define DEF_SRCIPv6 "fe80:0000:0000:0000:FFFF:FFFF:FFFF:FFFF"
 #define DEF_DSTPT 1
 #define DEF_SRCPT 65535
 #define DEF_MINLEN 60
@@ -49,6 +52,7 @@ struct pktgen_info
     uint maxsize;
     uint pktcount;
     uint interval;
+    uint protocol;
 
     /* stats */
     uint start;
@@ -70,9 +74,9 @@ static void usage(char *prog)
            DEF_COUNT);
     printf("\t-i <interval>  milliseconds between packet sends [%d]\n",
            DEF_INTERVAL);
-    printf("\t-h <dst-ip>    destination IP for header [%s]\n",
-           DEF_DSTIP);
-    printf("\t-H <src-ip>    source IP for header [%s]\n", DEF_SRCIP);
+    printf("\t-h <dst-ip>    destination IP for header [%s] or [%s] for IPv6\n",
+           DEF_DSTIP, DEF_DSTIPv6);
+    printf("\t-H <src-ip>    source IP for header [%s] or [%s] for IPv6\n", DEF_SRCIP, DEF_SRCIPv6);
     printf("\t-p <dst-port>  destination port for header [%d]\n",
            DEF_DSTPT);
     printf("\t-P <src-port>  source port for header [%d]\n", DEF_SRCPT);
@@ -104,8 +108,8 @@ shellcmd xsh_pktgen(int nargs, char *args[])
     /* defaults */
     interval = DEF_INTERVAL;
     count = DEF_COUNT;
-    dstip = DEF_DSTIP;
-    srcip = DEF_SRCIP;
+    dstip = NULL;
+    srcip = NULL;
     dstpt = DEF_DSTPT;
     srcpt = DEF_SRCPT;
     minlen = DEF_MINLEN;
@@ -114,7 +118,8 @@ shellcmd xsh_pktgen(int nargs, char *args[])
     /* parse args */
     struct getopt opts;
     opts.optreset = TRUE;
-    while ((arg = getopt(nargs, args, "c:i:h:H:p:P:l:L:", &opts)) != -1)
+    uint protocol = IPv4_VERSION;
+    while ((arg = getopt(nargs, args, "c:i:h:H:p:P:l:L:s:", &opts)) != -1)
     {
         switch (arg)
         {
@@ -142,6 +147,10 @@ shellcmd xsh_pktgen(int nargs, char *args[])
         case 'L':
             maxlen = atoi(opts.optarg);
             break;
+        case 's':
+            printf("Protocol\r\n");
+            protocol = atoi(opts.optarg);
+            break;
         default:
             usage(prog);
             return 1;
@@ -161,15 +170,38 @@ shellcmd xsh_pktgen(int nargs, char *args[])
     info.dev_id = getdev(args[0]);
     colon2mac(args[1], info.dstmac);
 
-    dot2ipv4(dstip, &info.dstip);
-    dot2ipv4(srcip, &info.srcip);
-    info.l3_proto = IPv4_PROTO_UDP;
+    switch (protocol)
+    {
+        case IPv4_VERSION:
+            if (dstip == NULL)
+                dstip = DEF_DSTIP;
+            if (srcip == NULL)
+                srcip = DEF_SRCIP;
+            dot2ipv4(dstip, &info.dstip);
+            dot2ipv4(srcip, &info.srcip);
+            info.l3_proto = IPv4_PROTO_UDP;
+            break;
+
+        case IPv6_VERSION:
+            if (dstip == NULL)
+                dstip = DEF_DSTIPv6;
+            if (srcip == NULL)
+                srcip = DEF_SRCIPv6;
+            dot2ipv6(dstip, &info.dstip);
+            dot2ipv6(srcip, &info.srcip);
+            info.l3_proto = NXT_HDR_UDP;
+            break;
+
+        default:
+            break;
+    }
     info.dstpt = dstpt;
     info.srcpt = srcpt;
     info.minsize = minlen;
     info.maxsize = maxlen;
     info.pktcount = count;
     info.interval = interval;
+    info.protocol = protocol;
 
     /* spawn proper pktgen thread */
     tid = create(pktgen, INITSTK, INITPRIO, "pktgen", 1, &info);
@@ -177,6 +209,7 @@ shellcmd xsh_pktgen(int nargs, char *args[])
 
     /* listen for keypress to force stop */
     printf("Press enter/return to stop.\n");
+    printf("Protocol %d\r\n", protocol);
     getchar();
     kill(tid);
 
@@ -198,6 +231,7 @@ thread pktgen(struct pktgen_info *info)
     uchar *data;
     struct etherPkt *ethhdr;
     struct ipv4Pkt *iphdr;
+    struct ipv6Pkt *ipv6hdr;
     struct udpPkt *udphdr;
 
     /* start the clock */
@@ -232,24 +266,44 @@ thread pktgen(struct pktgen_info *info)
         ethhdr = (struct etherPkt *)data;
         memcpy(ethhdr->dst, info->dstmac, ETH_ADDR_LEN);
         control(info->dev_id, ETH_CTRL_GET_MAC, (long)ethhdr->src, NULL);
-        ethhdr->type = ETHER_TYPE_IPv4;
         data += sizeof(*ethhdr);
 
         /* IP */
-        iphdr = (struct ipv4Pkt *)data;
-        // this looks magic, it is not.
-        iphdr->ver_ihl = (IPv4_VERSION << 4) | (sizeof(*iphdr) >> 2);;
-        iphdr->tos = IPv4_TOS_ROUTINE;
-        iphdr->len = hs2net(pkt->len - sizeof(*ethhdr));
-        iphdr->id = 0;
-        iphdr->flags_froff = 0;
-        iphdr->ttl = IPv4_TTL;
-        iphdr->proto = info->l3_proto;
-        iphdr->chksum = 0;
-        memcpy(iphdr->src, info->srcip.addr, IPv4_ADDR_LEN);
-        memcpy(iphdr->dst, info->dstip.addr, IPv4_ADDR_LEN);
-        iphdr->chksum = netChksum(iphdr, IPv4_HDR_LEN);
-        data += sizeof(*iphdr);
+        switch (info->protocol)
+        {
+            case IPv4_VERSION:
+                ethhdr->type = ETHER_TYPE_IPv4;
+                iphdr = (struct ipv4Pkt *)data;
+                // this looks magic, it is not.
+                iphdr->ver_ihl = (IPv4_VERSION << 4) | (sizeof(*iphdr) >> 2);;
+                iphdr->tos = IPv4_TOS_ROUTINE;
+                iphdr->len = hs2net(pkt->len - sizeof(*ethhdr));
+                iphdr->id = 0;
+                iphdr->flags_froff = 0;
+                iphdr->ttl = IPv4_TTL;
+                iphdr->proto = info->l3_proto;
+                iphdr->chksum = 0;
+                memcpy(iphdr->src, info->srcip.addr, IPv4_ADDR_LEN);
+                memcpy(iphdr->dst, info->dstip.addr, IPv4_ADDR_LEN);
+                iphdr->chksum = netChksum(iphdr, IPv4_HDR_LEN);
+                data += sizeof(*iphdr);
+                break;
+            
+            case IPv6_VERSION:
+                ethhdr->type = ETHER_TYPE_IPv6;
+                ipv6hdr = (struct ipv6Pkt *)data;
+                ipv6hdr->ver_class_flow = hl2net(0b01100000000000000000000000000000);
+                ipv6hdr->next_header = info->l3_proto;
+                ipv6hdr->hop_limit = IPv6_HOP_LIMIT;
+                ipv6hdr->len = hs2net(pkt->len - sizeof(*ethhdr) - sizeof(*iphdr));
+                memcpy(ipv6hdr->src, info->srcip.addr, IPv6_ADDR_LEN);
+                memcpy(ipv6hdr->dst, info->dstip.addr, IPv6_ADDR_LEN);
+                data += sizeof(*iphdr);
+                break;
+
+            default:
+                break;
+        }
 
         if (IPv4_PROTO_UDP == info->l3_proto)
         {
