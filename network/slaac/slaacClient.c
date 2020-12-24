@@ -58,9 +58,9 @@ syscall slaacClient(int descrp, uint timeout, struct slaacData *data)
 
     // IPv6 TODO : Duplicate Address Detection 
 
-    //if(SYSERR == sendRouterSolicitation()){
-    //    return SYSERR;
-    //}
+    if(SYSERR == sendRouterSolicitation(data)){
+        return SYSERR;
+    }
 
     return OK;
 }
@@ -112,11 +112,15 @@ syscall readRouterAdvertisementPackets(void){
     } while (TRUE);
 }
 
-syscall sendRouterSolicitation(void)
+syscall sendRouterSolicitation(struct slaacData *data)
 {
     struct packet *result = NULL;
+    struct netaddr b;
     int tid;
+    int ipv6Result;
     int i;
+
+    dot2ipv6(ALL_ROUTER_MULTICAST_ADDR, &b);
 
     /* This somewhat of a hack to implement a timeout:  Wait for the reply in
      * another thread to avoid blocking on read().  */
@@ -133,6 +137,10 @@ syscall sendRouterSolicitation(void)
         printf("=== Sending Router Solicitation ===\r\n");
         result = icmp6RouterSol();
         printf("icmp6RouterSol = %d\r\n", (int)result);
+        ipv6Result = ipv6Send(result, &(data->ip), &b, NXT_HDR_ICMP);
+        printf("ipv6Send = %d\r\n", (int)ipv6Result);
+
+        netFreebuf(result);
         sleep(1000);
     }
 

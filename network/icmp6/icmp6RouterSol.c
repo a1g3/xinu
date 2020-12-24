@@ -1,7 +1,7 @@
 #include <xinu.h>
 #include <icmp6.h>
 
-syscall icmp6RouterSol(void)
+struct packet *icmp6RouterSol(void)
 {
     struct packet *pkt;
     struct icmp6RouterSol *routerSol;
@@ -11,7 +11,7 @@ syscall icmp6RouterSol(void)
     if (SYSERR == (int)pkt)
     {
         printf("Failed to acquire packet buffer");
-        return SYSERR;
+        return NULL;
     }
     /* Setup structures */
     dot2ipv6(ALL_ROUTER_MULTICAST_ADDR, &b);
@@ -26,5 +26,7 @@ syscall icmp6RouterSol(void)
     routerSol->zeros[2] = 0;
     routerSol->zeros[3] = 0;
 
-    return icmp6Send(pkt, 133, 0, pkt->len, &(netiftab[0].ip), &b);
+    icmp6Create(pkt, 133, 0, pkt->len, &(netiftab[0].ip), &b);
+
+    return pkt;
 }

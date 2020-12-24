@@ -57,7 +57,7 @@ struct icmp6LinkDestOption {
 
 syscall icmp6Create(struct packet *pkt, uchar type, uchar code, 
                 uint datalen, struct netaddr *src, struct netaddr *dst);
-syscall icmp6RouterSol(void);
+struct packet *icmp6RouterSol(void);
 struct packet *icmp6NeighborSol(bool isDuplicateAddrDetection, struct netaddr *target);
 struct packet *icmp6EchoRequest(struct netaddr *dst, ushort id, ushort seq);
 void printicmp6(struct icmp6Pkt *pkt);

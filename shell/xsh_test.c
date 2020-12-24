@@ -35,11 +35,11 @@ shellcmd xsh_test(int nargs, char *args[])
 
     /* Setup structures */
     dot2ipv6("1111:1111:1111:1111:1111:1111::", &a);
-    dot2ipv6("1234:5678:90AB:CDEF:1234:ABCD::", &b);
+    dot2ipv6(ALL_ROUTER_MULTICAST_ADDR, &b);
 
-    result = icmp6NeighborSol(FALSE, &b);
-    printf("icmp6NeighborSol = 0x%08X\r\n", (uint)result);
-    ipv6Result = ipv6Send(result, &a, &b, NXT_HDR_ICMP);
+    result = icmp6RouterSol();
+    printf("icmp6NeighborSol = 0x%08X\r\n", result);
+    ipv6Result = ipv6Send(result, &(netiftab[0].ip), &b, NXT_HDR_ICMP);
     printf("ipv6Send = %d\r\n", ipv6Result);
     
     return 0;
