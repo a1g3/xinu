@@ -43,6 +43,7 @@ syscall icmp6Create(struct packet *pkt, uchar type, uchar code,
 
     int chksum = netChksum(puesdo_header, ICMP6_HEADER_LEN + IPv6_PUESDO_HEADER_LEN + datalen);
     icmp->chksum = chksum;
+    printf("ICMP Checksum: 0x%04X\r\n", chksum);
 
     bzero(puesdo_header, sizeof(struct ipv6_puesdo_header));
     pkt->curr += IPv6_PUESDO_HEADER_LEN;

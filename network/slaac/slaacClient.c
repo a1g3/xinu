@@ -58,7 +58,9 @@ syscall slaacClient(int descrp, uint timeout, struct slaacData *data)
 
     // IPv6 TODO : Duplicate Address Detection 
 
-
+    //if(SYSERR == sendRouterSolicitation()){
+    //    return SYSERR;
+    //}
 
     return OK;
 }
@@ -112,7 +114,6 @@ syscall readRouterAdvertisementPackets(void){
 
 syscall sendRouterSolicitation(void)
 {
-    kprintf("\r\n===TEST BEGIN===\r\n");
     struct packet *result = NULL;
     int tid;
     int i;
@@ -128,9 +129,8 @@ syscall sendRouterSolicitation(void)
 
     ready(tid, RESCHED_YES, 0);
 
-    //printf("\r\n\r\n=== ICMP Send ===\r\n");
     for(i = 0; i < 10; i++){
-        printf("=== Sending Neighbor Solicitation ===\r\n");
+        printf("=== Sending Router Solicitation ===\r\n");
         result = icmp6RouterSol();
         printf("icmp6RouterSol = %d\r\n", (int)result);
         sleep(1000);

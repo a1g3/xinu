@@ -31,16 +31,16 @@ shellcmd xsh_test(int nargs, char *args[])
     struct netaddr a;
     struct netaddr b;
     struct packet *result = NULL;
-    int tid;
-    int i;
+    int ipv6Result;
 
     /* Setup structures */
-    dot2ipv6(ALL_ROUTER_MULTICAST_ADDR, &a);
+    dot2ipv6("1111:1111:1111:1111:1111:1111::", &a);
     dot2ipv6("1234:5678:90AB:CDEF:1234:ABCD::", &b);
 
-    //struct packet *pkt = netGetbuf();
-    //result = ipv6Send(pkt, &a, &b, 59);
-    //printf("ipv6Send = %d\r\n", result);
+    result = icmp6NeighborSol(FALSE, &b);
+    printf("icmp6NeighborSol = 0x%08X\r\n", (uint)result);
+    ipv6Result = ipv6Send(result, &a, &b, NXT_HDR_ICMP);
+    printf("ipv6Send = %d\r\n", ipv6Result);
     
     return 0;
 }
