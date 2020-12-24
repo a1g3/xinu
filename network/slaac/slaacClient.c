@@ -56,91 +56,98 @@ syscall slaacClient(int descrp, uint timeout, struct slaacData *data)
     data->ip.addr[12] = 0xFE;
     data->ip.addr[8] |= 0b00000010;
 
+    // IPv6 TODO : Duplicate Address Detection 
+
+
+
     return OK;
 }
 
-void readNeighborAdvReply(int descrp, struct packet *pkt, struct netaddr* ip){
-    const struct etherPkt *epkt;
-    const struct ipv6Pkt *ipv6;
-    const struct icmp6Pkt *icmp;
+syscall readRouterAdvertisementPackets(void){
+    int maxlen;
     int mtu;
     int linkhdrlen;
-    uint maxlen;
+    const struct etherPkt *epkt;
+    const struct ipv6Pkt *ipv6;
+    int descrp = ETH0;
+    struct packet *pkt;
 
     mtu = control(descrp, NET_GET_MTU, 0, 0);
     linkhdrlen = control(descrp, NET_GET_LINKHDRLEN, 0, 0);
     if (SYSERR == mtu || SYSERR == linkhdrlen)
     {
-        printf("SYSERR\r\n");
-        return;
+        return SYSERR;
     }
 
     maxlen = linkhdrlen + mtu;
-    printf("Listening for neighbor advertisement\r\n");
 
     /* Receive packets until we find a response we're waiting for.  */
+
     do
     {
+        pkt = netGetbuf();
+
         /* Receive next packet from the network device.  */
-        printf("Waiting for packet\r\n");
         int len = read(descrp, pkt->data, maxlen);
-        printf("Packet\r\n");
         if (len == SYSERR || len <= 0)
         {
-            printf("SYSERR\r\n");
-            return;
+            return SYSERR;
         }
 
         pkt->len = len;
+        printf("Received packet (len=%u).\r\n", pkt->len);
 
-        /* Set up header pointers  */
         epkt = (const struct etherPkt *)pkt->data;
         ipv6 = (const struct ipv6Pkt *)epkt->data;
-        icmp = (const struct icmp6Pkt *)ipv6->data;
-
-        printf("Network layer packet is 0x%04X\r\n", net2hs(epkt->type));
-
-        if(icmp->type == 136 && icmp->code == 0){
-            printicmp6((struct icmp6Pkt *)icmp);
-            printf("Found a NA packet!\r\n");
-            return;
+        printf("Upper layer is 0x%04X (%d)\r\n", epkt->type, epkt->type);
+        if(net2hs(epkt->type) == ETHER_TYPE_IPv6){
+            printf("IPv6 Next Header: (%d)\r\n", ipv6->next_header);
+            netFreebuf(pkt);
+            return OK;
         }
 
-    } while(TRUE);
+        netFreebuf(pkt);
+    } while (TRUE);
 }
 
-void sendNeighborSol(int descrp, struct netaddr* ip){
-    struct packet *neighborSolPkt;
-    int retVal = 0;
-    struct netaddr src;
-    struct packet *pkt;
+syscall sendRouterSolicitation(void)
+{
+    kprintf("\r\n===TEST BEGIN===\r\n");
+    struct packet *result = NULL;
+    int tid;
+    int i;
 
-    pkt = netGetbuf();
-    if (SYSERR == (int)pkt)
+    /* This somewhat of a hack to implement a timeout:  Wait for the reply in
+     * another thread to avoid blocking on read().  */
+    tid = create(readRouterAdvertisementPackets, NET_THR_STK, NET_THR_PRIO,
+                 "readIpv6Packets", 0);
+    if (isbadtid(tid))
     {
-        printf("Failed to acquire packet buffer");
-        return;
+        return SYSERR;
     }
 
-    char str2[40];
-    netaddrsprintf(str2, ip);
-    printf("sendNeighborSol IP: %s\r\n", str2);
-    neighborSolPkt = icmp6NeighborSol(TRUE, ip);
-    if(NULL == neighborSolPkt){
-        printf("Could not create Neighbor Solicitaiton request!\r\n");
-        netFreebuf(pkt);
-        return;
+    ready(tid, RESCHED_YES, 0);
+
+    //printf("\r\n\r\n=== ICMP Send ===\r\n");
+    for(i = 0; i < 10; i++){
+        printf("=== Sending Neighbor Solicitation ===\r\n");
+        result = icmp6RouterSol();
+        printf("icmp6RouterSol = %d\r\n", (int)result);
+        sleep(1000);
     }
 
-    dot2ipv6(UNSPECIFIED_ADDR, &src);
-    retVal = ipv6Send(neighborSolPkt, &src, ip, NXT_HDR_ICMP);
-    if(retVal == SYSERR) {
-        printf("Could not send Neighbor Solicitaiton request!\r\n");
-        netFreebuf(pkt);
-        return;
+    /* Wait at most @timeout milliseconds for the thread to terminate before
+     * returning TIMEOUT.  */
+    if (TIMEOUT == recvtime(10000))
+    {
+        kill(tid);
+        receive();
+        printf("Timeout occured\r\n");
+    }
+    else
+    {
+        printf("Received an IPv6 packet!\r\n");
     }
 
-    printf("Sent neighbor solicitation packet\r\n");
-    readNeighborAdvReply(descrp, pkt, ip);
+    return OK;
 }
-
