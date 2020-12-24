@@ -11,6 +11,9 @@
 #include <network.h>
 #include <ether.h>
 
+#define DHCP_RECV_STKSIZE NET_THR_STK
+#define DHCP_RECV_PRIO    NET_THR_PRIO
+
 struct slaacData
 {
     struct netaddr ip;
@@ -19,5 +22,7 @@ struct slaacData
 };
 
 syscall slaacClient(int descrp, uint timeout, struct slaacData *data);
+void readNeighborAdvReply(int descrp, struct packet *pkt, struct netaddr* ip);
+void sendNeighborSol(int descrp, struct netaddr* ip);
 
 #endif /* _SLAAC_H_ */

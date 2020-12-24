@@ -15,7 +15,7 @@
  * @param seq sequence number
  * @return OK if packet was sent, otherwise SYSERR
  */
-syscall icmp6EchoRequest(struct netaddr *dst, ushort id, ushort seq)
+struct packet *icmp6EchoRequest(struct netaddr *dst, ushort id, ushort seq)
 {
     struct packet *pkt;
     struct icmp6Echo *echo;
@@ -25,7 +25,7 @@ syscall icmp6EchoRequest(struct netaddr *dst, ushort id, ushort seq)
     pkt = netGetbuf();
     if (SYSERR == (int)pkt)
     {
-        return SYSERR;
+        return NULL;
     }
 
     pkt->len = sizeof(struct icmp6Echo);
@@ -38,5 +38,10 @@ syscall icmp6EchoRequest(struct netaddr *dst, ushort id, ushort seq)
     /* Setup structures */
     dot2ipv6("1234:5678:90AB:CDEF:1234:ABCD::", &b);
 
-    return icmp6Send(pkt, 128, 0, pkt->len, &a, dst);
+    if(SYSERR == icmp6Create(pkt, 128, 0, pkt->len, &a, dst)){
+        netFreebuf(pkt);
+        return NULL;
+    }
+
+    return pkt;
 }

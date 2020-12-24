@@ -70,7 +70,7 @@ syscall ipv6Send(struct packet *pkt, struct netaddr *src,
     memcpy(ip->src, src->addr, IPv6_ADDR_LEN);
     memcpy(ip->dst, dst->addr, IPv6_ADDR_LEN);
 
-    // printIpv6Packet(ip);
+    printIpv6Packet(ip);
 
     // IPv6 TODO: Fragment IPv6 packets (if needed). Fragmentation only happens at end hosts.
     return netSend(pkt, &mac, NULL, ETHER_TYPE_IPv6);

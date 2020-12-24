@@ -2,21 +2,21 @@
 #include <icmp6.h>
 
 //https://blogs.infoblox.com/ipv6-coe/slaac-to-basics-part-1-of-2/
-syscall icmp6NeighborSol(bool isDuplicateAddrDetection, struct netaddr *target)
+struct packet *icmp6NeighborSol(bool isDuplicateAddrDetection, struct netaddr *target)
 {
     struct packet *pkt;
     struct netaddr src;
     struct icmp6NeighborSol *neighborSol;
 
     if(target != NULL && target->type != NETADDR_IPv6){
-        return SYSERR;
+        return NULL;
     }
 
     pkt = netGetbuf();
     if (SYSERR == (int)pkt)
     {
         printf("Failed to acquire packet buffer");
-        return SYSERR;
+        return NULL;
     }
 
     if(!isDuplicateAddrDetection){
@@ -34,9 +34,17 @@ syscall icmp6NeighborSol(bool isDuplicateAddrDetection, struct netaddr *target)
     memcpy(neighborSol->addr, target->addr, IPv6_ADDR_LEN);
 
     if(!isDuplicateAddrDetection){
-        return icmp6Send(pkt, 135, 0, pkt->len, &(netiftab[0].ip), target);
+        if(SYSERR == icmp6Create(pkt, 135, 0, pkt->len, &(netiftab[0].ip), target)){
+            netFreebuf(pkt);
+            return NULL;
+        }
     } else {
         dot2ipv6(UNSPECIFIED_ADDR, &src);
-        return icmp6Send(pkt, 135, 0, pkt->len, &src, target);
+        if(SYSERR == icmp6Create(pkt, 135, 0, pkt->len, &src, target)){
+            netFreebuf(pkt);
+            return NULL;
+        }
     }
+
+    return pkt;
 }

@@ -240,6 +240,10 @@ shellcmd xsh_netup(int nargs, char *args[])
         printf("SLAAC Result: %d\r\n", result);
         netaddrsprintf(str2, &(data.ip));
         printf("IP: %s\r\n", str2);
+
+        ip.type = NETADDR_IPv6;
+        ip.len = IPv6_ADDR_LEN;
+        memcpy(&(ip.addr), &(data.ip.addr), IPv6_ADDR_LEN);
         dot2ipv6("fe80:0000:0000:0000:0000:0000:0000:0000", &mask);
         dot2ipv6("fe80:0000:0000:0000:1491:82ff:fec6:55fa", &gateway);
         gatewayptr = &gateway;
@@ -247,6 +251,11 @@ shellcmd xsh_netup(int nargs, char *args[])
     }
 
     result = netUp(descrp, &ip, &mask, gatewayptr);
+
+    #ifdef WITH_IPv6
+    //kprintf("Calling sendNeighborSol\r\n");
+    //sendNeighborSol(descrp, &ip);
+    #endif
 
     if (OK == result)
     {

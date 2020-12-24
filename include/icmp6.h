@@ -55,12 +55,14 @@ struct icmp6LinkDestOption {
     uint8_t addr[ETH_ADDR_LEN];
 };
 
-syscall icmp6Send(struct packet *pkt, uchar type, uchar code, 
+syscall icmp6Create(struct packet *pkt, uchar type, uchar code, 
                 uint datalen, struct netaddr *src, struct netaddr *dst);
 syscall icmp6RouterSol(void);
-syscall icmp6NeighborSol(bool isDuplicateAddrDetection, struct netaddr *target);
-syscall icmp6EchoRequest(struct netaddr *dst, ushort id, ushort seq);
+struct packet *icmp6NeighborSol(bool isDuplicateAddrDetection, struct netaddr *target);
+struct packet *icmp6EchoRequest(struct netaddr *dst, ushort id, ushort seq);
 void printicmp6(struct icmp6Pkt *pkt);
 void icmp6AddLinkDestOption(struct packet *pkt);
+syscall icmp6Send(struct packet *pkt, uchar type, uchar code, 
+                uint datalen, struct netaddr *src, struct netaddr *dst);
 
 #endif                          /* _ICMP6_H_ */
