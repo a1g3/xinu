@@ -40,8 +40,10 @@ syscall slaacClient(int descrp, uint timeout, struct slaacData *data)
 
     bzero(data, sizeof(*data));
     /* Client hardware address is known; get it from network device.  */
+    data->mac.type = NETADDR_ETHERNET;
+    data->mac.len = ETH_ADDR_LEN;
     if (SYSERR == control(descrp, ETH_CTRL_GET_MAC,
-                            (long)data->clientHwAddr, 0))
+                            (long)data->mac.addr, 0))
     {
         printf("Failed to get client hardware address");
         return SYSERR;
@@ -50,8 +52,8 @@ syscall slaacClient(int descrp, uint timeout, struct slaacData *data)
     dot2ipv6("fe80:0000:0000:0000:0000:0000:0000:0000", &(data->ip));
 
     // Create EUI-64 format (pg. 389)
-    memcpy(&(data->ip.addr[8]), &(data->clientHwAddr), 3);
-    memcpy(&(data->ip.addr[13]), &(data->clientHwAddr[3]), 3);
+    memcpy(&(data->ip.addr[8]), &(data->mac.addr), 3);
+    memcpy(&(data->ip.addr[13]), &(data->mac.addr[3]), 3);
     data->ip.addr[11] = 0xFF;
     data->ip.addr[12] = 0xFE;
     data->ip.addr[8] |= 0b00000010;
@@ -65,7 +67,22 @@ syscall slaacClient(int descrp, uint timeout, struct slaacData *data)
     return OK;
 }
 
-syscall readRouterAdvertisementPackets(void){
+syscall ethernetCreate(struct packet *pkt, struct slaacData *data, struct netaddr *dstMac, ushort proto){
+    struct etherPkt *ether;
+
+    /* Make space for Link-Level header */
+    pkt->curr -= ETH_HDR_LEN;
+    pkt->len += ETH_HDR_LEN;
+    ether = (struct etherPkt *)(pkt->curr);
+
+    memcpy(ether->dst, dstMac->addr, ETH_ADDR_LEN);
+    memcpy(ether->src, data->mac.addr, ETH_ADDR_LEN);
+    ether->type = hs2net(proto);
+
+    return OK;
+}
+
+syscall readRouterAdvertisementPackets(struct slaacData *data){
     int maxlen;
     int mtu;
     int linkhdrlen;
@@ -116,16 +133,26 @@ syscall sendRouterSolicitation(struct slaacData *data)
 {
     struct packet *result = NULL;
     struct netaddr b;
+    struct netaddr mac;
     int tid;
     int ipv6Result;
     int i;
 
     dot2ipv6(ALL_ROUTER_MULTICAST_ADDR, &b);
 
+    mac.type = NETADDR_ETHERNET;
+    mac.len = ETH_ADDR_LEN;
+    mac.addr[0] = 0x33;
+    mac.addr[1] = 0x33;
+    mac.addr[2] = 0x00;
+    mac.addr[3] = 0x00;
+    mac.addr[4] = 0x00;
+    mac.addr[5] = 0x02;
+
     /* This somewhat of a hack to implement a timeout:  Wait for the reply in
      * another thread to avoid blocking on read().  */
     tid = create(readRouterAdvertisementPackets, NET_THR_STK, NET_THR_PRIO,
-                 "readIpv6Packets", 0);
+                 "readIpv6Packets", 1, data);
     if (isbadtid(tid))
     {
         return SYSERR;
@@ -133,20 +160,22 @@ syscall sendRouterSolicitation(struct slaacData *data)
 
     ready(tid, RESCHED_YES, 0);
 
-    for(i = 0; i < 10; i++){
-        printf("=== Sending Router Solicitation ===\r\n");
-        result = icmp6RouterSol();
-        printf("icmp6RouterSol = %d\r\n", (int)result);
-        ipv6Result = ipv6Send(result, &(data->ip), &b, NXT_HDR_ICMP);
-        printf("ipv6Send = %d\r\n", (int)ipv6Result);
+    for(i = 0; i < 3; i++){
+        result = icmp6RouterSol(&(data->ip), &(data->mac));
+        ipv6Result = ipv6Create(result, &(data->ip), &b, NXT_HDR_ICMP);
+        ipv6Result = ethernetCreate(result, data, &mac, ETHER_TYPE_IPv6);
+
+        if(result->len != write(ETH0, result->curr, result->len)){
+            printf("Did not write correct size to ETH0 device!\r\n");
+        }
 
         netFreebuf(result);
-        sleep(1000);
+        sleep(500);
     }
 
     /* Wait at most @timeout milliseconds for the thread to terminate before
      * returning TIMEOUT.  */
-    if (TIMEOUT == recvtime(10000))
+    if (TIMEOUT == recvtime(500))
     {
         kill(tid);
         receive();

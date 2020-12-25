@@ -57,11 +57,11 @@ struct icmp6LinkDestOption {
 
 syscall icmp6Create(struct packet *pkt, uchar type, uchar code, 
                 uint datalen, struct netaddr *src, struct netaddr *dst);
-struct packet *icmp6RouterSol(void);
-struct packet *icmp6NeighborSol(bool isDuplicateAddrDetection, struct netaddr *target);
+struct packet *icmp6RouterSol(struct netaddr *src, struct netaddr *mac);
+struct packet *icmp6NeighborSol(bool isDuplicateAddrDetection, struct netaddr *dst, struct netaddr *mac);
 struct packet *icmp6EchoRequest(struct netaddr *dst, ushort id, ushort seq);
 void printicmp6(struct icmp6Pkt *pkt);
-void icmp6AddLinkDestOption(struct packet *pkt);
+void icmp6AddLinkDestOption(struct packet *pkt, struct netaddr *mac);
 syscall icmp6Send(struct packet *pkt, uchar type, uchar code, 
                 uint datalen, struct netaddr *src, struct netaddr *dst);
 

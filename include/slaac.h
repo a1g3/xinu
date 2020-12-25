@@ -17,8 +17,7 @@
 struct slaacData
 {
     struct netaddr ip;
-    
-    uchar clientHwAddr[ETH_ADDR_LEN];
+    struct netaddr mac;
 };
 
 syscall slaacClient(int descrp, uint timeout, struct slaacData *data);
