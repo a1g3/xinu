@@ -33,9 +33,9 @@ syscall icmp6Send(struct packet *pkt, uchar type, uchar code,
 
     puesdo_header = (struct ipv6_puesdo_header *)pkt->curr;
 
-    puesdo_header->empty[0] = 0;
-    puesdo_header->empty[1] = 0;
-    puesdo_header->empty[2] = 0;
+    puesdo_header->resv[0] = 0;
+    puesdo_header->resv[1] = 0;
+    puesdo_header->resv[2] = 0;
     puesdo_header->next_header = NXT_HDR_ICMP;
     memcpy(puesdo_header->src, src->addr, IPv6_ADDR_LEN);
     memcpy(puesdo_header->dst, dst->addr, IPv6_ADDR_LEN);

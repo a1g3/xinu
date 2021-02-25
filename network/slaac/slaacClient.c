@@ -114,13 +114,15 @@ syscall readRouterAdvertisementPackets(struct slaacData *data){
         }
 
         pkt->len = len;
-        printf("Received packet (len=%u).\r\n", pkt->len);
+        //printf("Received packet (len=%u).\r\n", pkt->len);
 
         epkt = (const struct etherPkt *)pkt->data;
         ipv6 = (const struct ipv6Pkt *)epkt->data;
-        printf("Upper layer is 0x%04X (%d)\r\n", epkt->type, epkt->type);
-        if(net2hs(epkt->type) == ETHER_TYPE_IPv6){
-            printf("IPv6 Next Header: (%d)\r\n", ipv6->next_header);
+        //printf("Upper layer is 0x%04X (%d)\r\n", epkt->type, epkt->type);
+        if(net2hs(epkt->type) == ETHER_TYPE_IPv6 && ipv6->next_header == NXT_HDR_ICMP){
+            //printf("IPv6 Next Header: (%d)\r\n", ipv6->next_header);
+            int ret = icmp6ReceiveRouterAdver(pkt);
+            printf("icmp6ReceiveRouterAdver = %d\r\n", ret);
             netFreebuf(pkt);
             return OK;
         }
@@ -135,7 +137,6 @@ syscall sendRouterSolicitation(struct slaacData *data)
     struct netaddr b;
     struct netaddr mac;
     int tid;
-    int ipv6Result;
     int i;
 
     dot2ipv6(ALL_ROUTER_MULTICAST_ADDR, &b);
@@ -162,8 +163,8 @@ syscall sendRouterSolicitation(struct slaacData *data)
 
     for(i = 0; i < 3; i++){
         result = icmp6RouterSol(&(data->ip), &(data->mac));
-        ipv6Result = ipv6Create(result, &(data->ip), &b, NXT_HDR_ICMP);
-        ipv6Result = ethernetCreate(result, data, &mac, ETHER_TYPE_IPv6);
+        ipv6Create(result, &(data->ip), &b, NXT_HDR_ICMP);
+        ethernetCreate(result, data, &mac, ETHER_TYPE_IPv6);
 
         if(result->len != write(ETH0, result->curr, result->len)){
             printf("Did not write correct size to ETH0 device!\r\n");

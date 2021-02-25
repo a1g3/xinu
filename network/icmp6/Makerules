@@ -6,7 +6,7 @@ COMP = network/icmp6
 # Source files for this component
 
 # Important network components
-C_FILES = icmp6Send.c icmp6Create.c icmp6RouterSol.c icmp6Debug.c icmp6EchoRequest.c icmp6Utils.c icmp6NeighborSol.c
+C_FILES = icmp6Send.c icmp6Create.c icmp6RouterSol.c icmp6Debug.c icmp6EchoRequest.c icmp6Utils.c icmp6NeighborSol.c icmp6ReceiveRouterAdver.c icmp6ParseOptions.c
 S_FILES =
 
 # Add the files to the compile source path

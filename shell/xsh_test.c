@@ -38,7 +38,7 @@ shellcmd xsh_test(int nargs, char *args[])
     dot2ipv6(ALL_ROUTER_MULTICAST_ADDR, &b);
 
     result = icmp6RouterSol(&a, &(netiftab[0].hwaddr));
-    printf("icmp6NeighborSol = 0x%08X\r\n", result);
+    printf("icmp6NeighborSol = 0x%08X\r\n", (uint)result);
     ipv6Result = ipv6Send(result, &a, &b, NXT_HDR_ICMP);
     printf("ipv6Send = %d\r\n", ipv6Result);
     
